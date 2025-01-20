@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://stenciljs.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.ee275b6c.png&w=256&q=75" width="200">
+    <img src="/profile/logo.svg" width="200">
 </p>
 
 <p align="center">
