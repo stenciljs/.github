@@ -28,7 +28,7 @@ runs:
         token: ${{ inputs.github-token }}
 
     - name: Get Core Dependencies
-      uses: stenciljs/.github/actions/get-core-dependencies
+      uses: stenciljs/.github/actions/get-core-dependencies@main
 
     - name: Get Project Name
       id: repo-name
@@ -39,7 +39,7 @@ runs:
       shell: bash
 
     - name: Download Build Archive
-      uses: stenciljs/.github/actions/download-archive
+      uses: stenciljs/.github/actions/download-archive@main
       with:
         name: stencil-${{ steps.repo-name.outputs.REPO_NAME }}
         path: .
