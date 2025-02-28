@@ -30,16 +30,24 @@ runs:
     - name: Get Core Dependencies
       uses: ./.github/workflows/actions/get-core-dependencies
 
+    - name: Get Project Name
+      id: repo-name
+      run: |
+        REPO_NAME=${GITHUB_REPOSITORY#*/}
+        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+        echo "Repository name: $REPO_NAME"        
+      shell: bash
+
     - name: Download Build Archive
       uses: ./.github/workflows/actions/download-archive
       with:
-        name: stencil-sass
+        name: stencil-${{ steps.repo-name.outputs.REPO_NAME }}
         path: .
-        filename: stencil-sass-build.zip
+        filename: stencil-${{ steps.repo-name.outputs.REPO_NAME }}-build.zip
 
     # Remove the ZIP file after we've extracted it - we don't want this committed back to the repo
     - name: Delete The Archive ZIP File
-      run: rm stencil-sass-build.zip
+      run: rm stencil-${{ steps.repo-name.outputs.REPO_NAME }}-build.zip
       shell: bash
 
     - name: Configure Git

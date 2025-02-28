@@ -1,14 +1,14 @@
-name: 'Create Stencil Sass Archive Upload'
-description: 'compresses and uploads an archive to be reused across jobs'
+name: Create Archive
+description: Compresses and uploads an archive to be reused across jobs
 inputs:
   paths:
-    description: 'paths to files or directories to archive (recursive)'
+    description: paths to files or directories to archive (recursive)
   output:
-    description: 'output file name'
+    description: output file name
   name:
-    description: 'name of the archive to upload'
+    description: name of the archive to upload
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Create Archive
       run: zip -q -r ${{ inputs.output }} ${{ inputs.paths }}
