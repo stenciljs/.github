@@ -78,6 +78,9 @@ runs:
     - name: Create Changelog
       if: inputs.tag == 'latest'
       run: |
+        # Download the git-conventional-commits config file
+        curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/main/.github/git-conventional-commits.yml
+
         LAST_TAG=$(git describe --tags --abbrev=0)
         echo "Create Changelog $LAST_TAG..HEAD"
         git log \
@@ -85,10 +88,13 @@ runs:
           --date=short \
           $LAST_TAG..HEAD \
           | npx git-conventional-commits changelog \
-          --config ./.github/git-conventional-commits.yml \
+          --config ./git-conventional-commits.yml \
           --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
           > CHANGELOG.md
         cat CHANGELOG.md
+
+        # Remove the git-conventional-commits config file again
+        rm ./git-conventional-commits.yml
       shell: bash
 
     - name: Push Version
