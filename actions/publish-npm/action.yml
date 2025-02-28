@@ -82,7 +82,6 @@ runs:
           --config ./git-conventional-commits.yml \
           --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
           > CHANGELOG.md
-        cat CHANGELOG.md
 
         # Remove the git-conventional-commits config file again
         rm ./git-conventional-commits.yml
@@ -95,6 +94,11 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
   
+
+    - name: Display Changelog
+      run: cat CHANGELOG.md
+      shell: bash
+
     - name: Push Release
       if: inputs.tag == 'latest'
       uses: softprops/action-gh-release@v2
