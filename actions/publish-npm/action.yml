@@ -74,14 +74,7 @@ runs:
 
         LAST_TAG=$(git describe --tags --abbrev=0)
         echo "Create Changelog $LAST_TAG..HEAD"
-        git log \
-          --pretty=format:"%h %ad %s [%an]" \
-          --date=short \
-          $LAST_TAG..HEAD \
-          | npx git-conventional-commits changelog \
-          --config ./git-conventional-commits.yml \
-          --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
-          > CHANGELOG.md
+        git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
 
         # Remove the git-conventional-commits config file again
         rm ./git-conventional-commits.yml
@@ -93,7 +86,6 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-  
 
     - name: Display Changelog
       run: cat CHANGELOG.md
