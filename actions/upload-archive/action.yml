@@ -3,18 +3,23 @@ description: Compresses and uploads an archive to be reused across jobs
 inputs:
   paths:
     description: paths to files or directories to archive (recursive)
-  output:
-    description: output file name
-  name:
-    description: name of the archive to upload
+    default: ./dist/
 runs:
   using: composite
   steps:
+    - name: Get Project Name
+      id: repo-name
+      run: |
+        REPO_NAME=${GITHUB_REPOSITORY#*/}
+        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+        echo "Repository name: $REPO_NAME"        
+      shell: bash
+
     - name: Create Archive
-      run: zip -q -r ${{ inputs.output }} ${{ inputs.paths }}
+      run: zip -q -r ${{ steps.repo-name.outputs.REPO_NAME }}.zip ${{ inputs.paths }}
       shell: bash
 
     - uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       with:
-        name: ${{ inputs.name }}
-        path: ${{ inputs.output }}
+        name: ${{ steps.repo-name.outputs.REPO_NAME }}
+        path: ${{ steps.repo-name.outputs.REPO_NAME }}.zip
