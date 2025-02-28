@@ -71,6 +71,7 @@ runs:
       run: |
         # Download the git-conventional-commits config file
         curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/main/.github/git-conventional-commits.yml
+        cat git-conventional-commits.yml
 
         LAST_TAG=$(git describe --tags --abbrev=0)
         echo "Create Changelog $LAST_TAG..HEAD"
