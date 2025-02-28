@@ -28,7 +28,7 @@ runs:
         token: ${{ inputs.github-token }}
 
     - name: Get Core Dependencies
-      uses: ./.github/workflows/actions/get-core-dependencies
+      uses: ./actions/get-core-dependencies
 
     - name: Get Project Name
       id: repo-name
@@ -39,7 +39,7 @@ runs:
       shell: bash
 
     - name: Download Build Archive
-      uses: ./.github/workflows/actions/download-archive
+      uses: ./actions/download-archive
       with:
         name: stencil-${{ steps.repo-name.outputs.REPO_NAME }}
         path: .
