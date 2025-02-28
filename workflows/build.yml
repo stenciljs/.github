@@ -1,0 +1,31 @@
+# Basic workflow to build a project
+name: Build
+
+on:
+  workflow_call:
+  # Make this a reusable workflow, no value needed
+  # https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+jobs:
+  build_stencil_sass:
+    name: Build Stencil Sass
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 🧑‍💻 Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: 📦 Get Core Dependencies
+        uses: stenciljs/.github/actions/get-core-dependencies@main
+
+      - name: 🏗️ Build
+        run: npm run build
+        shell: bash
+
+      - name: 🧪 Unit Tests
+        run: npm test
+        shell: bash
+
+      - name: 📤 Upload Build Artifacts
+        uses: stenciljs/.github/actions/upload-archive@main
