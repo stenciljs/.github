@@ -86,7 +86,7 @@ runs:
       if: inputs.tag == 'latest'
       run: |
         # Download the git-conventional-commits config file
-        curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/main/.github/git-conventional-commits.yml
+        curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/refs/heads/main/git-conventional-commits.yml
         cat git-conventional-commits.yml
 
         # Check if there are any tags, and handle initial release case
@@ -120,7 +120,6 @@ runs:
 
         # Remove the git-conventional-commits config file again
         rm ./git-conventional-commits.yml
-      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Push Version
