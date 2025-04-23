@@ -10,6 +10,10 @@ inputs:
   github-token:
     description: The GitHub token required to push to the repository.
     required: false
+  working-directory:
+    description: The working directory where the package is located.
+    required: false
+    default: '.'
 
 runs:
   using: 'composite'
@@ -19,6 +23,7 @@ runs:
       run: |
         echo "Version: ${{ inputs.version }}"
         echo "Tag: ${{ inputs.tag }}"
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Checkout Code
@@ -36,6 +41,7 @@ runs:
         REPO_NAME=${GITHUB_REPOSITORY#*/}
         echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
         echo "Repository name: $REPO_NAME"        
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Download Build Archive
@@ -46,16 +52,19 @@ runs:
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Bump Version
       if: inputs.tag == 'dev'
       run: npm version --no-git-tag-version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Bump Version
       if: inputs.tag == 'latest'
       run: npm version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
     
     - name: Get Tag Name
@@ -64,6 +73,7 @@ runs:
       run: |
         PKG_JSON_VERSION=v$(cat package.json | jq -r '.version')
         echo "PKG_JSON_VERSION=$PKG_JSON_VERSION" >> $GITHUB_OUTPUT
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Create Changelog
@@ -79,17 +89,20 @@ runs:
 
         # Remove the git-conventional-commits config file again
         rm ./git-conventional-commits.yml
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Push Version
       if: inputs.tag == 'latest'
       run: git push origin main
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Display Changelog
       run: cat CHANGELOG.md
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Push Release
@@ -98,7 +111,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
-        body_path: CHANGELOG.md
+        body_path: ${{ inputs.working-dir }}/CHANGELOG.md
         generate_release_notes: true
         make_latest: true
         tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
@@ -107,19 +120,23 @@ runs:
     - name: Log Generated Changes
       if: inputs.tag == 'dev'
       run: git --no-pager diff
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     # Log the git status for easy debugging
     - name: Log Status
       run: git status
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
 
     - name: Prepare NPM Token
       run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
         NPM_TOKEN: ${{ inputs.token }}
 
     - name: Publish to NPM
       run: npm publish --tag ${{ inputs.tag }} --provenance
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
