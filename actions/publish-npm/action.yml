@@ -118,6 +118,7 @@ runs:
       if: inputs.tag == 'latest'
       run: |
         echo "Make version commit"
+        git add ${{ inputs.working-directory }}/package.json
         git commit -m "v${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
         echo "Push version commit"
         git push origin main
