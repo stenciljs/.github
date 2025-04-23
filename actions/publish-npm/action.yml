@@ -95,17 +95,13 @@ runs:
           LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
           echo "Create Changelog $LAST_TAG..HEAD"
 
-          # Save git log to a temporary file first
-          git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short > git_log_output.txt
-          
+          # Show git log for debugging
           echo "Git log output:"
-          cat git_log_output.txt
+          git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
           
-          # Now process the file with git-conventional-commits
-          npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} < git_log_output.txt > CHANGELOG.md
-          
-          # Clean up
-          rm git_log_output.txt
+          # Let git-conventional-commits handle git directly
+          # Add --from and --to options to specify commit range
+          npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} --from $LAST_TAG > CHANGELOG.md
         else
           # No tags exist - this is the initial release
           echo "Initial release - creating initial changelog"
