@@ -96,9 +96,16 @@ runs:
           echo "Create Changelog $LAST_TAG..HEAD"
           git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
         else
-          # No tags exist - this is the initial release, use all commits
-          echo "Initial release - including all commits in changelog"
-          git log --pretty=format:"%h %ad %s [%an]" --date=short | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
+          # No tags exist - this is the initial release, create a manual changelog
+          echo "Initial release - creating initial changelog"
+          echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## 🎉 Initial Release" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "This is the first release of the package." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Commits" >> CHANGELOG.md
+          git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
         fi
 
         # Remove the git-conventional-commits config file again
@@ -125,7 +132,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
-        body_path: ${{ inputs.working-dir }}/CHANGELOG.md
+        body_path: ${{ inputs.working-directory }}/CHANGELOG.md
         generate_release_notes: true
         make_latest: true
         tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
