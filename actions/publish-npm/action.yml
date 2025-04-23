@@ -31,141 +31,141 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
-    - name: Checkout Code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      with:
-        fetch-depth: 0
-        token: ${{ inputs.github-token }}
+    # - name: Checkout Code
+    #   uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    #   with:
+    #     fetch-depth: 0
+    #     token: ${{ inputs.github-token }}
 
-    - name: Get Core Dependencies
-      if: inputs.skip-setup == 'no'
-      uses: stenciljs/.github/actions/get-core-dependencies@main
+    # - name: Get Core Dependencies
+    #   if: inputs.skip-setup == 'no'
+    #   uses: stenciljs/.github/actions/get-core-dependencies@main
 
-    - name: Get Project Name
-      id: repo-name
-      run: |
-        REPO_NAME=${GITHUB_REPOSITORY#*/}
-        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-        echo "Repository name: $REPO_NAME"        
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Get Project Name
+    #   id: repo-name
+    #   run: |
+    #     REPO_NAME=${GITHUB_REPOSITORY#*/}
+    #     echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+    #     echo "Repository name: $REPO_NAME"        
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
 
-    - name: Download Build Archive
-      if: inputs.skip-setup == 'no'
-      uses: stenciljs/.github/actions/download-archive@main
+    # - name: Download Build Archive
+    #   if: inputs.skip-setup == 'no'
+    #   uses: stenciljs/.github/actions/download-archive@main
 
-    - name: Configure Git
-      if: inputs.tag == 'latest'
-      run: |
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git config --global user.name "github-actions[bot]"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Configure Git
+    #   if: inputs.tag == 'latest'
+    #   run: |
+    #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    #     git config --global user.name "github-actions[bot]"
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
 
-    - name: Bump Version
-      if: inputs.tag == 'dev'
-      run: npm version --no-git-tag-version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Bump Version
+    #   if: inputs.tag == 'dev'
+    #   run: npm version --no-git-tag-version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
 
-    - name: Bump Version
-      if: inputs.tag == 'latest'
-      run: npm version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Bump Version
+    #   if: inputs.tag == 'latest'
+    #   run: npm version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
     
-    - name: Get Tag Name
-      id: package-version
-      if: inputs.tag == 'latest'
-      run: |
-        PKG_JSON_VERSION=v$(cat package.json | jq -r '.version')
-        echo "PKG_JSON_VERSION=$PKG_JSON_VERSION" >> $GITHUB_OUTPUT
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Get Tag Name
+    #   id: package-version
+    #   if: inputs.tag == 'latest'
+    #   run: |
+    #     PKG_JSON_VERSION=v$(cat package.json | jq -r '.version')
+    #     echo "PKG_JSON_VERSION=$PKG_JSON_VERSION" >> $GITHUB_OUTPUT
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
 
-    # Note: we don't commit the changelog file as we show it as part of the GitHub Release
-    - name: Create Changelog
-      if: inputs.tag == 'latest'
-      run: |
-        # Download the git-conventional-commits config file
-        curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/refs/heads/main/git-conventional-commits.yml
-        cat git-conventional-commits.yml
+    # # Note: we don't commit the changelog file as we show it as part of the GitHub Release
+    # - name: Create Changelog
+    #   if: inputs.tag == 'latest'
+    #   run: |
+    #     # Download the git-conventional-commits config file
+    #     curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/refs/heads/main/git-conventional-commits.yml
+    #     cat git-conventional-commits.yml
 
-        # Check if there are any tags, and handle initial release case
-        if git tag -l | grep -q .; then
-          # Tags exist - use the most recent tag
-          LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
-          echo "Create Changelog $LAST_TAG..HEAD"
+    #     # Check if there are any tags, and handle initial release case
+    #     if git tag -l | grep -q .; then
+    #       # Tags exist - use the most recent tag
+    #       LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
+    #       echo "Create Changelog $LAST_TAG..HEAD"
 
-          # Show git log for debugging
-          echo "Git log output:"
-          git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
+    #       # Show git log for debugging
+    #       echo "Git log output:"
+    #       git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
           
-          # Generate the changelog
-          git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml > CHANGELOG.md
-        else
-          # No tags exist - this is the initial release
-          echo "Initial release - creating initial changelog"
-          # Create changelog without creating a commit
-          echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "## 🎉 Initial Release" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "This is the first release of the package." >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "### Commits" >> CHANGELOG.md
-          git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
-        fi
+    #       # Generate the changelog
+    #       git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml > CHANGELOG.md
+    #     else
+    #       # No tags exist - this is the initial release
+    #       echo "Initial release - creating initial changelog"
+    #       # Create changelog without creating a commit
+    #       echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
+    #       echo "" >> CHANGELOG.md
+    #       echo "## 🎉 Initial Release" >> CHANGELOG.md
+    #       echo "" >> CHANGELOG.md
+    #       echo "This is the first release of the package." >> CHANGELOG.md
+    #       echo "" >> CHANGELOG.md
+    #       echo "### Commits" >> CHANGELOG.md
+    #       git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
+    #     fi
 
-        # Remove the git-conventional-commits config file again
-        rm ./git-conventional-commits.yml
-      shell: bash
+    #     # Remove the git-conventional-commits config file again
+    #     rm ./git-conventional-commits.yml
+    #   shell: bash
 
-    - name: Push Version
-      if: inputs.tag == 'latest'
-      run: |
-        echo "Make version commit"
-        git commit -m "v${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
-        echo "Push version commit"
-        git push origin main
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+    # - name: Push Version
+    #   if: inputs.tag == 'latest'
+    #   run: |
+    #     echo "Make version commit"
+    #     git commit -m "v${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
+    #     echo "Push version commit"
+    #     git push origin main
+    #   shell: bash
+    #   env:
+    #     GITHUB_TOKEN: ${{ inputs.github-token }}
 
-    - name: Display Changelog
-      run: cat CHANGELOG.md
-      shell: bash
+    # - name: Display Changelog
+    #   run: cat CHANGELOG.md
+    #   shell: bash
 
-    - name: Push Release
-      if: inputs.tag == 'latest'
-      uses: softprops/action-gh-release@v2
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      with:
-        body_path: CHANGELOG.md
-        generate_release_notes: true
-        make_latest: true
-        tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
+    # - name: Push Release
+    #   if: inputs.tag == 'latest'
+    #   uses: softprops/action-gh-release@v2
+    #   env:
+    #     GITHUB_TOKEN: ${{ inputs.github-token }}
+    #   with:
+    #     body_path: CHANGELOG.md
+    #     generate_release_notes: true
+    #     make_latest: true
+    #     tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
 
-    # Log the git diff for easy debugging
-    - name: Log Generated Changes
-      if: inputs.tag == 'dev'
-      run: git --no-pager diff
-      shell: bash
+    # # Log the git diff for easy debugging
+    # - name: Log Generated Changes
+    #   if: inputs.tag == 'dev'
+    #   run: git --no-pager diff
+    #   shell: bash
 
-    # Log the git status for easy debugging
-    - name: Log Status
-      run: git status
-      shell: bash
+    # # Log the git status for easy debugging
+    # - name: Log Status
+    #   run: git status
+    #   shell: bash
 
-    - name: Prepare NPM Token
-      run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      env:
-        NPM_TOKEN: ${{ inputs.token }}
+    # - name: Prepare NPM Token
+    #   run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+    #   shell: bash
+    #   working-directory: ${{ inputs.working-directory }}
+    #   env:
+    #     NPM_TOKEN: ${{ inputs.token }}
 
-    - name: Publish to NPM
-      run: npm publish --tag ${{ inputs.tag }} --provenance
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
+    # - name: Publish to NPM
+    #   run: npm publish --tag ${{ inputs.tag }} --provenance
+    #   working-directory: ${{ inputs.working-directory }}
+    #   shell: bash
