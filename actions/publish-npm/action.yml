@@ -82,6 +82,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
+    # Note: we don't commit the changelog file as we show it as part of the GitHub Release
     - name: Create Changelog
       if: inputs.tag == 'latest'
       run: |
@@ -105,23 +106,14 @@ runs:
           # No tags exist - this is the initial release
           echo "Initial release - creating initial changelog"
           # Create changelog without creating a commit
-          git log --pretty=format:"%h %ad %s [%an]" --date=short | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --initial-version > CHANGELOG.md
-          
-          # If the generated changelog is empty or minimal, create a manual one with more details
-          if [ ! -s CHANGELOG.md ] || [ $(wc -l < CHANGELOG.md) -lt 5 ]; then
-            echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "## 🎉 Initial Release" >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "This is the first release of the package." >> CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "### Commits" >> CHANGELOG.md
-            git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
-          fi
-          
-          # For initial release, amend the version commit to include the changelog
-          git add CHANGELOG.md
-          git commit --amend --no-edit
+          echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## 🎉 Initial Release" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "This is the first release of the package." >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Commits" >> CHANGELOG.md
+          git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
         fi
 
         # Remove the git-conventional-commits config file again
