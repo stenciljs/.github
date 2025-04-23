@@ -99,16 +99,8 @@ runs:
           echo "Git log output:"
           git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
           
-          # Try the simplest approach first - no parameters
-          echo "Attempting to generate changelog..."
-          # Install the package globally to avoid npx issues
-          npm install -g git-conventional-commits
-          
-          # Run with maximum debugging
-          set -x
-          export DEBUG=git-conventional-commits:*
-          git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
-          set +x
+          # Generate the changelog
+          git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
         else
           # No tags exist - this is the initial release
           echo "Initial release - creating initial changelog"
