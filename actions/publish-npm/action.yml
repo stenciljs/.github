@@ -99,17 +99,9 @@ runs:
           echo "Git log output:"
           git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
           
-          # Create a simple JSON file with the commits
-          echo "Creating commit data file..."
-          echo '[' > commits.json
-          git log $LAST_TAG..HEAD --pretty=format:'{"hash": "%h", "date": "%ad", "subject": "%s", "author": "%an"},' --date=short | sed '$ s/,$//' >> commits.json
-          echo ']' >> commits.json
-          
-          # Use the json file as input for the changelog generator
-          cat commits.json | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
-          
-          # Clean up
-          rm commits.json
+          # Use npx git-conventional-commits with just the necessary parameters
+          # The tool will handle git operations itself
+          npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
         else
           # No tags exist - this is the initial release
           echo "Initial release - creating initial changelog"
