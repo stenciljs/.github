@@ -100,12 +100,12 @@ runs:
           git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
           
           # Generate the changelog
-          git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} > CHANGELOG.md
+          git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml > CHANGELOG.md
         else
           # No tags exist - this is the initial release
           echo "Initial release - creating initial changelog"
           # Create changelog without creating a commit
-          git log --pretty=format:"%h %ad %s [%an]" --date=short | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --commit ${{ steps.package-version.outputs.PKG_JSON_VERSION }} --initial-version > CHANGELOG.md
+          git log --pretty=format:"%h %ad %s [%an]" --date=short | npx git-conventional-commits changelog --config ./git-conventional-commits.yml --initial-version > CHANGELOG.md
           
           # If the generated changelog is empty or minimal, create a manual one with more details
           if [ ! -s CHANGELOG.md ] || [ $(wc -l < CHANGELOG.md) -lt 5 ]; then
