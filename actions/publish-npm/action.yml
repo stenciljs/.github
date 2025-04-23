@@ -122,7 +122,11 @@ runs:
 
     - name: Push Version
       if: inputs.tag == 'latest'
-      run: git push origin main
+      run: |
+        echo "Make version commit"
+        git commit -m "v${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
+        echo "Push version commit"
+        git push origin main
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
