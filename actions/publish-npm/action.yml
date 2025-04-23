@@ -27,6 +27,7 @@ runs:
       run: |
         echo "Version: ${{ inputs.version }}"
         echo "Tag: ${{ inputs.tag }}"
+        ls -la
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
