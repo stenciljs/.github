@@ -28,6 +28,7 @@ runs:
         echo "Version: ${{ inputs.version }}"
         echo "Tag: ${{ inputs.tag }}"
         ls -la
+        npm pack
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
