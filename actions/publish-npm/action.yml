@@ -14,6 +14,10 @@ inputs:
     description: The working directory where the package is located.
     required: false
     default: '.'
+  skip-setup:
+    description: Skip the setup steps.
+    required: false
+    default: "no"
 
 runs:
   using: 'composite'
@@ -33,6 +37,7 @@ runs:
         token: ${{ inputs.github-token }}
 
     - name: Get Core Dependencies
+      if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/get-core-dependencies@main
 
     - name: Get Project Name
@@ -45,6 +50,7 @@ runs:
       shell: bash
 
     - name: Download Build Archive
+      if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/download-archive@main
 
     - name: Configure Git
