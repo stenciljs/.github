@@ -120,8 +120,6 @@ runs:
         echo "Make version commit"
         git add ${{ inputs.working-directory }}/package.json ${{ inputs.working-directory }}/CHANGELOG.md
         git commit -m "${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
-        echo "Set remote URL with token"
-        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/stenciljs/create-stencil.git
         echo "Push version commit"
         git push origin main
       shell: bash
