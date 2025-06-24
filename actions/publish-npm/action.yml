@@ -82,6 +82,10 @@ runs:
       run: |
         # Download the git-conventional-commits config file
         curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/refs/heads/main/git-conventional-commits.yml
+        
+        # Replace hardcoded repository URLs with current repository
+        sed -i.bak "s|https://github.com/stenciljs/sass|https://github.com/${GITHUB_REPOSITORY}|g" git-conventional-commits.yml
+        
         cat git-conventional-commits.yml
 
         # Check if there are any tags, and handle initial release case
