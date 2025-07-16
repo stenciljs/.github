@@ -116,6 +116,7 @@ runs:
 
         # Remove the git-conventional-commits config file again
         rm ./git-conventional-commits.yml
+        rm ./git-conventional-commits.yml.bak
       shell: bash
 
     - name: Push Version
