@@ -126,6 +126,7 @@ runs:
         if [ -f "${{ inputs.working-directory }}/CHANGELOG.md" ]; then
           git add ${{ inputs.working-directory }}/CHANGELOG.md
         fi
+        echo "Commit version"
         git commit -m "${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
         echo "Push version commit"
         git push origin main
