@@ -124,10 +124,12 @@ runs:
       run: |
         echo "Make version commit"
         git add ${{ inputs.working-directory }}/package.json
-        git status
-        git log
         echo "Commit version"
-        git commit -m "${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
+        if git diff --staged --quiet; then
+          echo "No changes to commit, skipping commit step"
+        else
+          git commit -m "${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
+        fi
         echo "Push version commit"
         git push origin main
       shell: bash
