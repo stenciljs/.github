@@ -23,18 +23,18 @@ runs:
   using: 'composite'
   steps:
     # Log the input from GitHub Actions for easy traceability
-    - name: Log Inputs
+    - name: 📝 Log Inputs
       run: |
         echo "Version: ${{ inputs.version }}"
         echo "Tag: ${{ inputs.tag }}"
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
-    - name: Get Core Dependencies
+    - name: 🕸️ Get Core Dependencies
       if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/get-core-dependencies@main
 
-    - name: Get Project Name
+    - name: 🔍 Get Project Name
       id: repo-name
       run: |
         REPO_NAME=${GITHUB_REPOSITORY#*/}
@@ -43,11 +43,11 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
-    - name: Download Build Archive
+    - name: 📥 Download Build Archive
       if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/download-archive@main
 
-    - name: Configure Git
+    - name: 🔧 Configure Git
       if: inputs.tag == 'latest'
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -55,19 +55,19 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
-    - name: Bump Version
+    - name: 🏷️ Bump Version
       if: inputs.tag == 'dev'
       run: npm version --no-git-tag-version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
       working-directory: ${{ inputs.working-directory }}
       shell: bash
 
-    - name: Bump Version
+    - name: 🏷️ Bump Version
       if: inputs.tag == 'latest'
       run: npm version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
       working-directory: ${{ inputs.working-directory }}
       shell: bash
     
-    - name: Get Tag Name
+    - name: 🔍 Get Tag Name
       id: package-version
       if: inputs.tag == 'latest'
       run: |
@@ -77,7 +77,7 @@ runs:
       shell: bash
 
     # Note: we don't commit the changelog file as we show it as part of the GitHub Release
-    - name: Create Changelog
+    - name: 📝 Create Changelog
       if: inputs.tag == 'latest'
       run: |
         # Download the git-conventional-commits config file
@@ -119,7 +119,7 @@ runs:
         rm ./git-conventional-commits.yml.bak
       shell: bash
 
-    - name: Push Version
+    - name: 🔄 Push Version
       if: inputs.tag == 'latest'
       run: |
         echo "Make version commit"
@@ -136,11 +136,11 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
 
-    - name: Display Changelog
+    - name: 📝 Display Changelog
       run: cat CHANGELOG.md
       shell: bash
 
-    - name: Push Release
+    - name: 🔄 Push Release
       if: inputs.tag == 'latest'
       uses: softprops/action-gh-release@v2
       env:
@@ -152,24 +152,24 @@ runs:
         tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
 
     # Log the git diff for easy debugging
-    - name: Log Generated Changes
+    - name: 📝 Log Generated Changes
       if: inputs.tag == 'dev'
       run: git --no-pager diff
       shell: bash
 
     # Log the git status for easy debugging
-    - name: Log Status
+    - name: 📝 Log Status
       run: git status
       shell: bash
 
-    - name: Prepare NPM Token
+    - name: 🔧 Prepare NPM Token
       run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
         NPM_TOKEN: ${{ inputs.token }}
 
-    - name: Publish to NPM
+    - name: 📦 Publish to NPM
       run: npm publish --tag ${{ inputs.tag }} --provenance
       working-directory: ${{ inputs.working-directory }}
       shell: bash
