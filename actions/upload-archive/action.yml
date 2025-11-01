@@ -7,7 +7,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Get Project Name
+    - name: 🔍 Get Project Name
       id: repo-name
       run: |
         REPO_NAME=${GITHUB_REPOSITORY#*/}
@@ -15,7 +15,7 @@ runs:
         echo "Repository name: $REPO_NAME"        
       shell: bash
 
-    - name: Create Archive
+    - name: 🗄️ Create Archive
       run: zip -q -r ${{ steps.repo-name.outputs.REPO_NAME }}.zip ${{ inputs.paths }}
       shell: bash
 
