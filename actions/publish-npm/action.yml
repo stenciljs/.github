@@ -53,12 +53,43 @@ runs:
       if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/download-archive@main
 
+    - name: 🧭 Detect package manager
+      id: detect-pm
+      if: inputs.skip-setup == 'no'
+      run: |
+        # Detect by looking for common lockfiles in the working directory
+        WD="${{ inputs.working-directory }}"
+        # normalize '.' case
+        if [ "$WD" = "." ]; then WD="."; fi
+
+        if [ -f "$WD/pnpm-lock.yaml" ] || [ -f "$WD/pnpm-lock.yaml" ]; then
+          echo "cache=pnpm" >> $GITHUB_OUTPUT
+          echo "pm=pnpm" >> $GITHUB_OUTPUT
+          echo "Detected pnpm"
+        elif [ -f "$WD/yarn.lock" ]; then
+          echo "cache=yarn" >> $GITHUB_OUTPUT
+          echo "pm=yarn" >> $GITHUB_OUTPUT
+          echo "Detected yarn"
+        elif [ -f "$WD/package-lock.json" ]; then
+          echo "cache=npm" >> $GITHUB_OUTPUT
+          echo "pm=npm" >> $GITHUB_OUTPUT
+          echo "Detected npm (package-lock.json)"
+        else
+          # Default to npm cache when nothing detectable
+          echo "cache=npm" >> $GITHUB_OUTPUT
+          echo "pm=npm" >> $GITHUB_OUTPUT
+          echo "No lockfile detected, defaulting to npm cache"
+        fi
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+
     - name: 🟢 Configure Node for Publish
       if: inputs.skip-setup == 'no'
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: ${{ inputs.registry-url }}
+        cache: ${{ steps.detect-pm.outputs.cache }}
 
     - name: 🔧 Configure Git
       if: inputs.tag == 'latest'
