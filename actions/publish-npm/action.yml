@@ -24,6 +24,9 @@ inputs:
     description: Registry URL used for npm publish.
     required: false
     default: 'https://registry.npmjs.org'
+  pm:
+    description: package manager, so a repo can declare pnpm if needed to ensure the lockfile is found
+    required: false
 
 runs:
   using: 'composite'
