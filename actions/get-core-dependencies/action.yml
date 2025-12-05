@@ -1,5 +1,15 @@
 name: Get Core Dependencies
 description: Sets the Node.js version and initializes core dependencies
+inputs:
+  node-version:
+    description: Node.js version to use when preparing the publish environment.
+    required: false
+    default: '20'
+  registry-url:
+    description: Registry URL used for npm publish.
+    required: false
+    default: 'https://registry.npmjs.org'
+    
 runs:
   using: composite
   steps:
@@ -11,6 +21,8 @@ runs:
       with:
         node-version-file: '.nvmrc'
         cache: 'npm'
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
 
     - name: 📦 Install Dependencies
       run: npm install

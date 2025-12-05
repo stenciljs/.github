@@ -39,6 +39,9 @@ runs:
     - name: 🕸️ Get Core Dependencies
       if: inputs.skip-setup == 'no'
       uses: stenciljs/.github/actions/get-core-dependencies@main
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
 
     - name: 🔍 Get Project Name
       id: repo-name
