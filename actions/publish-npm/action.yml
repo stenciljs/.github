@@ -25,7 +25,7 @@ inputs:
     required: false
     default: 'https://registry.npmjs.org'
   cache:
-    description: package manager, so a repo can declare pnpm if needed to ensure the lockfile is found: 'npm', 'yarn', 'pnpm'
+    description: package manager, so a repo can declare pnpm if needed to ensure the lockfile is found
     required: false
   cache-dependency-path:
     description: location of lockfile. if your repo is a monorepo, this might be different from the working-directory
