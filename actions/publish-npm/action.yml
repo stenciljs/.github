@@ -1,187 +1,86 @@
 name: Publish to NPM
-description: Publish the package to the NPM registry
+description: Publish the package to the NPM registry using npm Trusted Publishers
 inputs:
   version:
-    description: The type of version to release.
+    description: Semver bump or explicit version to release.
+    required: true
   tag:
-    description: The tag to publish to on NPM.
-  github-token:
-    description: The GitHub token required to push to the repository.
-    required: false
+    description: npm dist-tag to publish to.
+    required: true
   working-directory:
-    description: The working directory where the package is located.
+    description: Directory that contains the package.json file.
     required: false
-    default: '.'
-  skip-setup:
-    description: Skip the setup steps.
-    required: false
-    default: "no"
+    default: "."
   node-version:
-    description: Node.js version to use when preparing the publish environment.
+    description: Node.js version to use for publishing.
     required: false
-    default: '20'
+    default: "20"
   registry-url:
     description: Registry URL used for npm publish.
     required: false
-    default: 'https://registry.npmjs.org'
+    default: "https://registry.npmjs.org"
+  scope:
+    description: npm scope configured for trusted publisher auth. Leave blank for unscoped packages.
+    required: false
+    default: "@stencil"
+  install-command:
+    description: Command used to install dependencies. Leave blank to skip.
+    required: false
+    default: "npm ci"
+  build-command:
+    description: Command used to build the package. Leave blank to skip.
+    required: false
+    default: "npm run build"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-    # Log the input from GitHub Actions for easy traceability
+    - name: 📥 Checkout Code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
     - name: 📝 Log Inputs
+      shell: bash
       run: |
         echo "Version: ${{ inputs.version }}"
         echo "Tag: ${{ inputs.tag }}"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
 
-    - name: 🕸️ Get Core Dependencies
-      if: inputs.skip-setup == 'no'
-      uses: stenciljs/.github/actions/get-core-dependencies@main
-
-    - name: 🔍 Get Project Name
-      id: repo-name
-      run: |
-        REPO_NAME=${GITHUB_REPOSITORY#*/}
-        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-        echo "Repository name: $REPO_NAME"        
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
-
-    - name: 📥 Download Build Archive
-      if: inputs.skip-setup == 'no'
-      uses: stenciljs/.github/actions/download-archive@main
-
-    - name: 🟢 Configure Node for Publish
-      if: inputs.skip-setup == 'no'
+    - name: 🟢 Configure Node for Publish (Unscoped)
+      if: ${{ inputs.scope == '' }}
       uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: ${{ inputs.registry-url }}
 
-    - name: 🔧 Configure Git
-      if: inputs.tag == 'latest'
-      run: |
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git config --global user.name "github-actions[bot]"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
-
-    - name: 🏷️ Bump Version
-      if: inputs.tag == 'dev'
-      run: npm version --no-git-tag-version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
-
-    - name: 🏷️ Bump Version
-      if: inputs.tag == 'latest'
-      run: npm version ${{ inputs.version }} --tag-version-prefix="v" --message "v%s"
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
-    
-    - name: 🔍 Get Tag Name
-      id: package-version
-      if: inputs.tag == 'latest'
-      run: |
-        PKG_JSON_VERSION=v$(cat package.json | jq -r '.version')
-        echo "PKG_JSON_VERSION=$PKG_JSON_VERSION" >> $GITHUB_OUTPUT
-      working-directory: ${{ inputs.working-directory }}
-      shell: bash
-
-    # Note: we don't commit the changelog file as we show it as part of the GitHub Release
-    - name: 📝 Create Changelog
-      if: inputs.tag == 'latest'
-      run: |
-        # Download the git-conventional-commits config file
-        curl -o git-conventional-commits.yml https://raw.githubusercontent.com/stenciljs/.github/refs/heads/main/git-conventional-commits.yml
-        
-        # Replace hardcoded repository URLs with current repository
-        sed -i.bak "s|https://github.com/stenciljs/sass|https://github.com/${GITHUB_REPOSITORY}|g" git-conventional-commits.yml
-        
-        cat git-conventional-commits.yml
-
-        # Check if there are any tags, and handle initial release case
-        if git tag -l | grep -q .; then
-          # Tags exist - use the most recent tag
-          LAST_TAG=$(git tag --sort=-creatordate | head -n 1)
-          echo "Create Changelog $LAST_TAG..HEAD"
-
-          # Show git log for debugging
-          echo "Git log output:"
-          git log $LAST_TAG..HEAD --pretty=format:"%h %ad %s [%an]" --date=short
-          
-          # Generate the changelog
-          git log --pretty=format:"%h %ad %s [%an]" --date=short $LAST_TAG..HEAD | npx git-conventional-commits changelog --config ./git-conventional-commits.yml > CHANGELOG.md
-        else
-          # No tags exist - this is the initial release
-          echo "Initial release - creating initial changelog"
-          # Create changelog without creating a commit
-          echo "# ${{ steps.package-version.outputs.PKG_JSON_VERSION }} ($(date +%Y-%m-%d))" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "## 🎉 Initial Release" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "This is the first release of the package." >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "### Commits" >> CHANGELOG.md
-          git log --pretty=format:"* %h %s" --no-merges >> CHANGELOG.md
-        fi
-
-        # Remove the git-conventional-commits config file again
-        rm ./git-conventional-commits.yml
-        rm ./git-conventional-commits.yml.bak
-      shell: bash
-
-    - name: 🔄 Push Version
-      if: inputs.tag == 'latest'
-      run: |
-        echo "Make version commit"
-        git add ${{ inputs.working-directory }}/package.json
-        echo "Commit version"
-        if git diff --staged --quiet; then
-          echo "No changes to commit, skipping commit step"
-        else
-          git commit -m "${{ steps.package-version.outputs.PKG_JSON_VERSION }}"
-        fi
-        echo "Push version commit"
-        git push origin main
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-
-    - name: 📝 Display Changelog
-      run: cat CHANGELOG.md
-      shell: bash
-
-    - name: 🔄 Push Release
-      if: inputs.tag == 'latest'
-      uses: softprops/action-gh-release@v2
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+    - name: 🟢 Configure Node for Publish (Scoped)
+      if: ${{ inputs.scope != '' }}
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
-        body_path: CHANGELOG.md
-        generate_release_notes: true
-        make_latest: true
-        tag_name: ${{ steps.package-version.outputs.PKG_JSON_VERSION }}
-
-    # Log the git diff for easy debugging
-    - name: 📝 Log Generated Changes
-      if: inputs.tag == 'dev'
-      run: git --no-pager diff
-      shell: bash
-
-    # Log the git status for easy debugging
-    - name: 📝 Log Status
-      run: git status
-      shell: bash
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.scope }}
 
     - name: 🔄 Ensure Latest npm
-      if: inputs.skip-setup == 'no'
+      shell: bash
       run: npm install -g npm@latest
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
 
-    - name: 📦 Publish to NPM
-      run: npm publish --tag ${{ inputs.tag }} --provenance
-      working-directory: ${{ inputs.working-directory }}
+    - name: 📦 Install Dependencies
+      if: ${{ inputs.install-command != '' }}
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ${{ inputs.install-command }}
+
+    - name: 🛠️ Build Package
+      if: ${{ inputs.build-command != '' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: ${{ inputs.build-command }}
+
+    - name: 🏷️ Set Version
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm version --no-git-tag-version --allow-same-version ${{ inputs.version }}
+
+    - name: 🚀 Publish to npm
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm publish --tag ${{ inputs.tag }} --provenance
